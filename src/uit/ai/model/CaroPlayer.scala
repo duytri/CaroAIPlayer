@@ -3,8 +3,8 @@ package uit.ai.model
 import java.util.Random
 
 class CaroPlayer extends Player {
-  def getName: String = "Computer AI B"
-  def nextMove(board: Array[Array[Cell]], playerSide: Cell): (Int, Int) = {
+  def getName: String = "Computer AI"
+  def nextMoveRandom(board: Array[Array[Cell]], playerSide: Cell): (Int, Int) = {
     val size = board.length
     val random = new Random()
     while (true) {
@@ -24,4 +24,9 @@ class CaroPlayer extends Player {
     return num
   }
 
+  def nextMove(board: Array[Array[Cell]], playerSide: Cell): (Int, Int) = {
+    val size = board.length
+    var boardTree = new Tree[State]()
+    (-1, -1)
+  }
 }
