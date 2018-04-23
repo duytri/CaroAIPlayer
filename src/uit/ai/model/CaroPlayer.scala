@@ -26,7 +26,7 @@ class CaroPlayer extends Player {
 
   def nextMove(board: Array[Array[Cell]], playerSide: Cell): (Int, Int) = {
     val size = board.length
-    var boardTree = new Tree[State]()
+    var minimaxTree = new MinimaxTree()
     (-1, -1)
   }
 }
