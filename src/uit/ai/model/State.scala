@@ -7,7 +7,7 @@ class State(
   var value: Option[Int],
   val board: CaroBoard) {
 
-  def generateChildren(): List[State] = {
+  /*def generateChildren(): List[State] = {
     val children = new ListBuffer[State]
     for (e <- board.getEmpty()) {
       var state: State = null
@@ -18,7 +18,7 @@ class State(
       children.append(state)
     }
     children.toList
-  }
+  }*/
 
   def evaluateMove(board: CaroBoard, move: (Int, Int)): Int = {
     -10000
