@@ -2,7 +2,7 @@ package uit.ai.model
 
 import scala.collection.mutable.ListBuffer
 
-class CaroBoard(board: Array[Array[Cell]], hasBlock: Boolean) {
+class CaroBoard(val board: Array[Array[Cell]], val hasBlock: Boolean) {
 
   def this(rows: Int, cols: Int, hasBlock: Boolean) = this(Array.fill(rows, cols)(Blank): Array[Array[Cell]], hasBlock)
   def this(size: Int, hasBlock: Boolean) = this(size, size, hasBlock)
@@ -28,12 +28,41 @@ class CaroBoard(board: Array[Array[Cell]], hasBlock: Boolean) {
 
   def getBoard = board
 
-  def getEmpty(): List[(Int, Int)] = {
-    val result = new ListBuffer[(Int, Int)]
-    for (i <- 0 until rowCount)
-      for (j <- 0 until columnCount)
-        if (board(i)(j) == Blank) result.append((i, j))
-    result.toList
+  def getCandidates(): List[(Int, Int)] = {
+    val candidates = new ListBuffer[(Int, Int)]
+    val nonAvailableElems = new ListBuffer[(Int, Int)]
+    for (r <- 0 until rowCount)
+      for (c <- 0 until columnCount)
+        if (board(r)(c) != Blank)
+          nonAvailableElems.append((r, c))
+    for (e <- nonAvailableElems) {
+      if (e._1 + 1 < rowCount && !nonAvailableElems.contains((e._1 + 1, e._2)) && !candidates.contains((e._1 + 1, e._2))) //East
+        candidates.append((e._1 + 1, e._2))
+      if (e._1 - 1 >= 0 && !nonAvailableElems.contains((e._1 - 1, e._2)) && !candidates.contains((e._1 - 1, e._2))) //West
+        candidates.append((e._1 - 1, e._2))
+      if (e._2 - 1 >= 0 && !nonAvailableElems.contains((e._1, e._2 - 1)) && !candidates.contains((e._1, e._2 - 1))) //North
+        candidates.append((e._1, e._2 - 1))
+      if (e._2 + 1 < columnCount && !nonAvailableElems.contains((e._1, e._2 + 1)) && !candidates.contains((e._1, e._2 + 1))) //South
+        candidates.append((e._1, e._2 + 1))
+      if (e._1 + 1 < rowCount && e._2 - 1 >= 0 && !nonAvailableElems.contains((e._1 + 1, e._2 - 1)) && !candidates.contains((e._1 + 1, e._2 - 1))) //East-North
+        candidates.append((e._1 + 1, e._2 - 1))
+      if (e._1 + 1 < rowCount && e._2 + 1 < columnCount && !nonAvailableElems.contains((e._1 + 1, e._2 + 1)) && !candidates.contains((e._1 + 1, e._2 + 1))) //East-South
+        candidates.append((e._1 + 1, e._2 + 1))
+      if (e._1 - 1 >= 0 && e._2 + 1 < columnCount && !nonAvailableElems.contains((e._1 - 1, e._2 + 1)) && !candidates.contains((e._1 - 1, e._2 + 1))) //West-South
+        candidates.append((e._1 - 1, e._2 + 1))
+      if (e._1 - 1 >= 0 && e._2 - 1 >= 0 && !nonAvailableElems.contains((e._1 - 1, e._2 - 1)) && !candidates.contains((e._1 - 1, e._2 - 1))) //West-North
+        candidates.append((e._1 - 1, e._2 - 1))
+    }
+    println("Candidate size: " + candidates.size)
+    candidates.toList
+  }
+
+  override def clone(): CaroBoard = {
+    val cloneBoard = new CaroBoard(rowCount, columnCount, hasBlock)
+    for (r <- 0 until rowCount)
+      for (c <- 0 until columnCount)
+        cloneBoard.board(r)(c) = board(r)(c)
+    cloneBoard
   }
 
   // get board as collection of rows
@@ -97,11 +126,12 @@ class CaroBoard(board: Array[Array[Cell]], hasBlock: Boolean) {
   def update(row: Int, col: Int, Cell: Cell) = {
     board(row)(col) = Cell
   }
-  
-  // cap nhat lai nuoc di nguoi choi Cell danh
-  def updateAndGet(row: Int, col: Int, Cell: Cell) = {
-    board(row)(col) = Cell
-    this
+
+  // tao ban sao va cap nhat lai nuoc di nguoi choi Cell danh
+  def updateAndGet(row: Int, col: Int, Cell: Cell): CaroBoard = {
+    val cloneBoard = this.clone()
+    cloneBoard.update(row, col, Cell)
+    cloneBoard
   }
 }
 

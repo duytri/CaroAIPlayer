@@ -1,32 +1,37 @@
 package uit.ai.model
 
 import java.util.Random
+import scala.Array
 
 class CaroPlayer extends Player {
   def getName: String = "Computer AI"
-  def nextMoveRandom(board: Array[Array[Cell]], playerSide: Cell): (Int, Int) = {
-    val size = board.length
+  def nextMoveRandom(board: CaroBoard, playerSide: Cell): (Int, Int) = {
+    val size = board.rowCount
+    val b = board.getBoard
     val random = new Random()
     while (true) {
       val i = random.nextInt(size)
       val j = random.nextInt(size)
-      if (board(i)(j) == Blank)
+      if (b(i)(j) == Blank)
         return (i, j)
     }
     (-1, -1)
   }
-  def weightedRandom(max: Int, numDice: Int): Int = {
-    var num = 0
-    val random = new Random
-    for (i <- 0 until numDice) {
-      num += random.nextInt(max / numDice) * (max / numDice)
-    }
-    return num
-  }
 
-  def nextMove(board: Array[Array[Cell]], playerSide: Cell): (Int, Int) = {
-    val size = board.length
+  def nextMove(board: CaroBoard, playerSide: Cell): (Int, Int) = {
+    // rebuild caro board
+    val boolBoard: Array[Array[Option[Boolean]]] = Array.fill[Option[Boolean]](board.rowCount, board.columnCount)(null)
+    val tempBoard = board.getBoard
+    for (r <- 0 until board.rowCount)
+      for (c <- 0 until board.columnCount) {
+        if (tempBoard(r)(c) == Blank) boolBoard(r)(c) = null
+        else if (tempBoard(r)(c) == playerSide) boolBoard(r)(c) = Option(true)
+        else boolBoard(r)(c) = Option(false)
+      }
+    // build tree
     var minimaxTree = new MinimaxTree()
-    (-1, -1)
+    minimaxTree.setRootNode(boolBoard)
+    minimaxTree.fillInTheTree(5)
+    (7, 7)
   }
 }
