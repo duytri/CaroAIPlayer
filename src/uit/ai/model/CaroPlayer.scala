@@ -5,7 +5,7 @@ import scala.Array
 
 class CaroPlayer extends Player {
   def getName: String = "Computer AI"
-  def nextMoveRandom(board: CaroBoard, playerSide: Cell): (Int, Int) = {
+  def nextMoveRandom(board: CaroBoard, playerSide: Cell, hasBlock: Boolean): (Int, Int) = {
     val size = board.rowCount
     val b = board.getBoard
     val random = new Random()
@@ -18,7 +18,7 @@ class CaroPlayer extends Player {
     (-1, -1)
   }
 
-  def nextMove(board: CaroBoard, playerSide: Cell): (Int, Int) = {
+  def nextMove(board: CaroBoard, playerSide: Cell, hasBlock: Boolean): (Int, Int) = {
     // rebuild caro board
     val boolBoard: Array[Array[Option[Boolean]]] = Array.fill[Option[Boolean]](board.rowCount, board.columnCount)(null)
     val tempBoard = board.getBoard

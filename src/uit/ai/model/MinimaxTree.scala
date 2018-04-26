@@ -87,6 +87,34 @@ class MinimaxTree[Node] {
       resulfBuffer.toArray
     }
 
+    def nInARow(n: Int, array: Array[Option[Boolean]], hasBlock: Boolean): Option[Boolean] = {
+      for (i <- 0 until array.length - (n - 1)) {
+        var allTrue = true;
+        for (j <- i + 1 until i + n) {
+          allTrue &= array(j - 1) == array(j)
+        }
+        if (allTrue && array(i) != null) {
+          if (hasBlock) {
+            if (i > 0 && i + n < array.length && array(i - 1) != array(i) && array(i + n) != array(i) && array(i - 1) != null && array(i + n) != null) // dieu kien chan hai dau thi khong thang
+              return null
+            else
+              return array(i)
+          } else
+            return array(i)
+        }
+      }
+
+      return null
+    }
+
+    def checkWinAtState(hasBlock: Boolean): Option[Boolean] = {
+      val row = getRow(move)
+      val column = getColumn(move)
+      val ltr = getLTR(move)
+      val rtl = getRTL(move)
+      return nInARow(numInARowNeeded, row, hasBlock)
+    }
+
     def getBoard = board
 
     def getCandidates(): List[(Int, Int)] = {
@@ -116,7 +144,7 @@ class MinimaxTree[Node] {
         if (e._1 - 1 >= 0 && e._2 - 1 >= 0 && !nonAvailableElems.contains((e._1 - 1, e._2 - 1)) && !candidates.contains((e._1 - 1, e._2 - 1))) //West-North
           candidates.append((e._1 - 1, e._2 - 1))
       }
-      println("Candidate size: " + candidates.size)
+      //println("Candidate size: " + candidates.size)
       candidates.toList
     }
 
@@ -142,7 +170,7 @@ class MinimaxTree[Node] {
       //children
     }
 
-    def evaluateNode() = {
+    def evaluateState() = {
       -10000
     }
   }
