@@ -43,16 +43,17 @@ class MinimaxTree[Node] {
 
     def getLTR(move: (Int, Int)): Array[Option[Boolean]] = {
       val resulfBuffer = new ArrayBuffer[Option[Boolean]]
+      // start point
       var start = (0, 0)
-      if (move._1 - move._2 > 0) start = (move._1 - move._2, 0)
+      if (move._1 > move._2) start = (move._1 - move._2, 0) // neu x > y
       else start = (0, move._2 - move._1)
       var i = 0
-      if (rowCount - 1 - move._1 > columnCount - 1 - move._2) {
+      if (rowCount - 1 - move._1 > columnCount - 1 - move._2) { // diem cuoi cham canh doc lon nhat (column max)
         for (col <- start._2 until columnCount) {
           resulfBuffer.append(board(start._1 + i)(col))
           i += 1
         }
-      } else {
+      } else { // diem cuoi cham canh ngang lon nhat (row max)
         for (row <- start._1 until rowCount) {
           resulfBuffer.append(board(row)(start._2 + i))
           i += 1
@@ -64,18 +65,21 @@ class MinimaxTree[Node] {
 
     def getRTL(move: (Int, Int)): Array[Option[Boolean]] = {
       val resulfBuffer = new ArrayBuffer[Option[Boolean]]
+      // start point
       var start = (0, 0)
-      if (move._1 - move._2 > 0) start = (move._1 - move._2, 0)
-      else start = (0, move._2 - move._1)
+      if (move._2 > rowCount - 1 - move._1)
+        start = (rowCount - 1, move._1 + move._2 - rowCount + 1)
+      else
+        start = (move._1 + move._2, 0)
       var i = 0
-      if (rowCount - 1 - move._1 > columnCount - 1 - move._2) {
-        for (col <- start._2 until columnCount) {
-          resulfBuffer.append(board(start._1 + i)(col))
+      if (move._1 < columnCount - 1 - move._2) { // diem cuoi cham hang be nhat (row 0)
+        for (row <- start._1 to 0 by -1) {
+          resulfBuffer.append(board(row)(start._2 + i))
           i += 1
         }
-      } else {
-        for (row <- start._1 until rowCount) {
-          resulfBuffer.append(board(row)(start._2 + i))
+      } else { // diem cuoi cham canh doc lon nhat (column max)
+        for (col <- start._2 until columnCount) {
+          resulfBuffer.append(board(start._1 - i)(col))
           i += 1
         }
       }
