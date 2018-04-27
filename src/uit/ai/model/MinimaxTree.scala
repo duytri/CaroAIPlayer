@@ -107,7 +107,8 @@ class MinimaxTree[Node] {
       return null
     }
 
-    def checkWinAtState(hasBlock: Boolean): Option[Boolean] = {
+    def checkWinAtState(hasBlock: Boolean): Int = {
+      var value = 0 // tie
       val row = getRow(move)
       val column = getColumn(move)
       val ltr = getLTR(move)
