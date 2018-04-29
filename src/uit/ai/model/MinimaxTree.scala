@@ -33,15 +33,91 @@ class MinimaxTree[Node] {
       }
     }
 
-    def getRow(move: (Int, Int)): Array[Option[Boolean]] = {
+    def getBoard = board
+
+    def getCandidates(): List[(Int, Int)] = {
+      val candidates = new ListBuffer[(Int, Int)] //set of candidates
+      val nonAvailableElems = new ListBuffer[(Int, Int)] //set of non available movements
+      // get all non-available moves
+      for (r <- 0 until rowCount)
+        for (c <- 0 until columnCount)
+          if (board(r)(c) != null)
+            nonAvailableElems.append((r, c))
+      // check around to get candidates
+      for (e <- nonAvailableElems) {
+        if (e._1 + 1 < rowCount && !nonAvailableElems.contains((e._1 + 1, e._2)) && !candidates.contains((e._1 + 1, e._2))) //East
+          candidates.append((e._1 + 1, e._2))
+        if (e._1 - 1 >= 0 && !nonAvailableElems.contains((e._1 - 1, e._2)) && !candidates.contains((e._1 - 1, e._2))) //West
+          candidates.append((e._1 - 1, e._2))
+        if (e._2 - 1 >= 0 && !nonAvailableElems.contains((e._1, e._2 - 1)) && !candidates.contains((e._1, e._2 - 1))) //North
+          candidates.append((e._1, e._2 - 1))
+        if (e._2 + 1 < columnCount && !nonAvailableElems.contains((e._1, e._2 + 1)) && !candidates.contains((e._1, e._2 + 1))) //South
+          candidates.append((e._1, e._2 + 1))
+        if (e._1 + 1 < rowCount && e._2 - 1 >= 0 && !nonAvailableElems.contains((e._1 + 1, e._2 - 1)) && !candidates.contains((e._1 + 1, e._2 - 1))) //East-North
+          candidates.append((e._1 + 1, e._2 - 1))
+        if (e._1 + 1 < rowCount && e._2 + 1 < columnCount && !nonAvailableElems.contains((e._1 + 1, e._2 + 1)) && !candidates.contains((e._1 + 1, e._2 + 1))) //East-South
+          candidates.append((e._1 + 1, e._2 + 1))
+        if (e._1 - 1 >= 0 && e._2 + 1 < columnCount && !nonAvailableElems.contains((e._1 - 1, e._2 + 1)) && !candidates.contains((e._1 - 1, e._2 + 1))) //West-South
+          candidates.append((e._1 - 1, e._2 + 1))
+        if (e._1 - 1 >= 0 && e._2 - 1 >= 0 && !nonAvailableElems.contains((e._1 - 1, e._2 - 1)) && !candidates.contains((e._1 - 1, e._2 - 1))) //West-North
+          candidates.append((e._1 - 1, e._2 - 1))
+      }
+      //println("Candidate size: " + candidates.size)
+      candidates.toList
+    }
+
+    def updateAndGet(r: Int, c: Int, player: Boolean) = {
+      val cloneBoard: Array[Array[Option[Boolean]]] = Array.fill(rowCount, columnCount)(null)
+      for (i <- 0 until rowCount)
+        for (j <- 0 until columnCount)
+          cloneBoard(i)(j) = board(i)(j)
+      cloneBoard(r)(c) = Option(player)
+      cloneBoard
+    }
+
+    def generateChildren(maxLevel: Int, hasBlock: Boolean) = {
+      for (e <- getCandidates()) {
+        val state = updateAndGet(e._1, e._2, player)
+        var value: Option[Int] = null
+        val checkLeaf = {
+          Node.checkWinAtState(numInARowNeeded, state, e, hasBlock) match {
+            case Some(true) => {
+              value = Option(100000)
+              true
+            }
+            case Some(false) => {
+              value = Option(-100000)
+              true
+            }
+            case null => false
+            case None => false
+          }
+        }
+        var node: Node = new Node(level + 1, player, !isMax, checkLeaf, e, value, state, List.empty[Node])
+        children = children.+:(node)
+      }
+      //children
+    }
+
+    def evaluateState() = {
+      -10000
+    }
+  }
+
+  object Node {
+
+    def getRow(board: Array[Array[Option[Boolean]]], move: (Int, Int)): Array[Option[Boolean]] = {
       board(move._1)
     }
 
-    def getColumn(move: (Int, Int)): Array[Option[Boolean]] = {
+    def getColumn(board: Array[Array[Option[Boolean]]], move: (Int, Int)): Array[Option[Boolean]] = {
+      val rowCount = board.length
       (for (r <- 0 until rowCount) yield board(r)(move._2)).toArray
     }
 
-    def getLTR(move: (Int, Int)): Array[Option[Boolean]] = {
+    def getLTR(board: Array[Array[Option[Boolean]]], move: (Int, Int)): Array[Option[Boolean]] = {
+      val rowCount = board.length
+      val columnCount = if (board.isEmpty) 0 else board(0).length
       val resulfBuffer = new ArrayBuffer[Option[Boolean]]
       // start point
       var start = (0, 0)
@@ -63,7 +139,9 @@ class MinimaxTree[Node] {
       resulfBuffer.toArray
     }
 
-    def getRTL(move: (Int, Int)): Array[Option[Boolean]] = {
+    def getRTL(board: Array[Array[Option[Boolean]]], move: (Int, Int)): Array[Option[Boolean]] = {
+      val rowCount = board.length
+      val columnCount = if (board.isEmpty) 0 else board(0).length
       val resulfBuffer = new ArrayBuffer[Option[Boolean]]
       // start point
       var start = (0, 0)
@@ -107,72 +185,17 @@ class MinimaxTree[Node] {
       return null
     }
 
-    def checkWinAtState(hasBlock: Boolean): Int = {
-      var value = 0 // tie
-      val row = getRow(move)
-      val column = getColumn(move)
-      val ltr = getLTR(move)
-      val rtl = getRTL(move)
-      return nInARow(numInARowNeeded, row, hasBlock)
-    }
+    def checkWinAtState(numInARowNeeded: Int, state: Array[Array[Option[Boolean]]], move: (Int, Int), hasBlock: Boolean): Option[Boolean] = {
+      val row = nInARow(numInARowNeeded, getRow(state, move), hasBlock)
+      val column = nInARow(numInARowNeeded, getColumn(state, move), hasBlock)
+      val ltr = nInARow(numInARowNeeded, getLTR(state, move), hasBlock)
+      val rtl = nInARow(numInARowNeeded, getRTL(state, move), hasBlock)
 
-    def getBoard = board
-
-    def getCandidates(): List[(Int, Int)] = {
-      val candidates = new ListBuffer[(Int, Int)] //set of candidates
-      val nonAvailableElems = new ListBuffer[(Int, Int)] //set of non available movements
-      // get all non-available moves
-      for (r <- 0 until rowCount)
-        for (c <- 0 until columnCount)
-          if (board(r)(c) != null)
-            nonAvailableElems.append((r, c))
-      // check around to get candidates
-      for (e <- nonAvailableElems) {
-        if (e._1 + 1 < rowCount && !nonAvailableElems.contains((e._1 + 1, e._2)) && !candidates.contains((e._1 + 1, e._2))) //East
-          candidates.append((e._1 + 1, e._2))
-        if (e._1 - 1 >= 0 && !nonAvailableElems.contains((e._1 - 1, e._2)) && !candidates.contains((e._1 - 1, e._2))) //West
-          candidates.append((e._1 - 1, e._2))
-        if (e._2 - 1 >= 0 && !nonAvailableElems.contains((e._1, e._2 - 1)) && !candidates.contains((e._1, e._2 - 1))) //North
-          candidates.append((e._1, e._2 - 1))
-        if (e._2 + 1 < columnCount && !nonAvailableElems.contains((e._1, e._2 + 1)) && !candidates.contains((e._1, e._2 + 1))) //South
-          candidates.append((e._1, e._2 + 1))
-        if (e._1 + 1 < rowCount && e._2 - 1 >= 0 && !nonAvailableElems.contains((e._1 + 1, e._2 - 1)) && !candidates.contains((e._1 + 1, e._2 - 1))) //East-North
-          candidates.append((e._1 + 1, e._2 - 1))
-        if (e._1 + 1 < rowCount && e._2 + 1 < columnCount && !nonAvailableElems.contains((e._1 + 1, e._2 + 1)) && !candidates.contains((e._1 + 1, e._2 + 1))) //East-South
-          candidates.append((e._1 + 1, e._2 + 1))
-        if (e._1 - 1 >= 0 && e._2 + 1 < columnCount && !nonAvailableElems.contains((e._1 - 1, e._2 + 1)) && !candidates.contains((e._1 - 1, e._2 + 1))) //West-South
-          candidates.append((e._1 - 1, e._2 + 1))
-        if (e._1 - 1 >= 0 && e._2 - 1 >= 0 && !nonAvailableElems.contains((e._1 - 1, e._2 - 1)) && !candidates.contains((e._1 - 1, e._2 - 1))) //West-North
-          candidates.append((e._1 - 1, e._2 - 1))
-      }
-      //println("Candidate size: " + candidates.size)
-      candidates.toList
-    }
-
-    def updateAndGet(r: Int, c: Int, player: Boolean) = {
-      val cloneBoard: Array[Array[Option[Boolean]]] = Array.fill(rowCount, columnCount)(null)
-      for (i <- 0 until rowCount)
-        for (j <- 0 until columnCount)
-          cloneBoard(i)(j) = board(i)(j)
-      cloneBoard(r)(c) = Option(player)
-      cloneBoard
-    }
-
-    def generateChildren(maxLevel: Int) = {
-      for (e <- getCandidates()) {
-        val state = updateAndGet(e._1, e._2, player)
-        /*val checkLeaf = {
-          if (determineWinner(state) != null) true
-          else if (level + 1 == maxLevel) true else false
-        }*/
-        var node: Node = new Node(level + 1, player, !isMax, false, e, null, state, List.empty[Node])
-        children = children.+:(node)
-      }
-      //children
-    }
-
-    def evaluateState() = {
-      -10000
+      if (row != null) return row
+      else if (column != null) return column
+      else if (ltr != null) return ltr
+      else if (rtl != null) return rtl
+      else return null
     }
   }
 
@@ -206,14 +229,16 @@ class MinimaxTree[Node] {
     1 + n.children.foldLeft(0)((s, c) => s + size(c))
   }
 
-  def fillInTheTree(numberOfLevel: Int): Unit = {
+  def fillInTheTree(numberOfLevel: Int, hasBlock: Boolean): Unit = {
     preorder { n =>
       {
         if (n.level < numberOfLevel && !n.isLeaf) {
-          println("Level: " + n.level)
-          n.generateChildren(numberOfLevel)
+          //println("Level: " + n.level)
+          n.generateChildren(numberOfLevel, hasBlock)
+          //println("Has " + n.children.size + " childrens")
         }
       }
     }
+    println("Generation completed!")
   }
 }
