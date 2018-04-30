@@ -4,6 +4,11 @@ import scala.collection.mutable.ListBuffer
 import scala.collection.mutable.ArrayBuffer
 
 class MinimaxTree[Node] {
+
+  val WIN_VALUE = 100000
+  val FOUR_VALUE = 50000
+  val THREE_VALUE = 10000
+
   class Node(
     val level: Int,
     val player: Boolean,
@@ -80,13 +85,13 @@ class MinimaxTree[Node] {
         val state = updateAndGet(e._1, e._2, player)
         var value: Option[Int] = null
         val checkLeaf = {
-          Node.checkWinAtState(numInARowNeeded, state, e, hasBlock) match {
+          Node.checkWinAtState(numInARowNeeded, state, e, rowCount, columnCount, hasBlock) match {
             case Some(true) => {
-              value = Option(100000)
+              value = Option(WIN_VALUE) // I win
               true
             }
             case Some(false) => {
-              value = Option(-100000)
+              value = Option(-WIN_VALUE) // Opponent win
               true
             }
             case null => false
@@ -99,8 +104,37 @@ class MinimaxTree[Node] {
       //children
     }
 
-    def evaluateState() = {
-      -10000
+    def calculateValue(hasBlock: Boolean): Int = {
+      if (isLeaf && value != null) return value.get
+      else {
+        var point = 0
+        val bufferMove = new ArrayBuffer[Array[Option[Boolean]]]()
+        bufferMove.append(Node.getRow(board, move))
+        bufferMove.append(Node.getColumn(board, move, rowCount))
+        bufferMove.append(Node.getLTR(board, move, rowCount, columnCount))
+        bufferMove.append(Node.getRTL(board, move, rowCount, columnCount))
+        
+        val arrayMove = bufferMove.toArray
+        arrayMove.foreach(row => {
+          val side = Node.nInARow(3, row, hasBlock).get
+          if (side == true) // Me
+            point += THREE_VALUE
+          else if (side == false) // My Opponent
+            point -= THREE_VALUE
+        })
+
+        arrayMove.foreach(row => {
+          val side = Node.nInARow(4, row, hasBlock).get
+          if (side == true) // Me
+            point += FOUR_VALUE
+          else if (side == false) // My Opponent
+            point -= FOUR_VALUE
+        })
+
+        value = Option(point)
+
+        return point
+      }
     }
   }
 
@@ -110,14 +144,14 @@ class MinimaxTree[Node] {
       board(move._1)
     }
 
-    def getColumn(board: Array[Array[Option[Boolean]]], move: (Int, Int)): Array[Option[Boolean]] = {
-      val rowCount = board.length
+    def getColumn(board: Array[Array[Option[Boolean]]], move: (Int, Int), rowCount: Int): Array[Option[Boolean]] = {
+      //val rowCount = board.length
       (for (r <- 0 until rowCount) yield board(r)(move._2)).toArray
     }
 
-    def getLTR(board: Array[Array[Option[Boolean]]], move: (Int, Int)): Array[Option[Boolean]] = {
-      val rowCount = board.length
-      val columnCount = if (board.isEmpty) 0 else board(0).length
+    def getLTR(board: Array[Array[Option[Boolean]]], move: (Int, Int), rowCount: Int, columnCount: Int): Array[Option[Boolean]] = {
+      //val rowCount = board.length
+      //val columnCount = if (board.isEmpty) 0 else board(0).length
       val resulfBuffer = new ArrayBuffer[Option[Boolean]]
       // start point
       var start = (0, 0)
@@ -139,7 +173,7 @@ class MinimaxTree[Node] {
       resulfBuffer.toArray
     }
 
-    def getRTL(board: Array[Array[Option[Boolean]]], move: (Int, Int)): Array[Option[Boolean]] = {
+    def getRTL(board: Array[Array[Option[Boolean]]], move: (Int, Int), rowCount: Int, columnCount: Int): Array[Option[Boolean]] = {
       val rowCount = board.length
       val columnCount = if (board.isEmpty) 0 else board(0).length
       val resulfBuffer = new ArrayBuffer[Option[Boolean]]
@@ -185,11 +219,11 @@ class MinimaxTree[Node] {
       return null
     }
 
-    def checkWinAtState(numInARowNeeded: Int, state: Array[Array[Option[Boolean]]], move: (Int, Int), hasBlock: Boolean): Option[Boolean] = {
+    def checkWinAtState(numInARowNeeded: Int, state: Array[Array[Option[Boolean]]], move: (Int, Int), rowCount: Int, columnCount: Int, hasBlock: Boolean): Option[Boolean] = {
       val row = nInARow(numInARowNeeded, getRow(state, move), hasBlock)
-      val column = nInARow(numInARowNeeded, getColumn(state, move), hasBlock)
-      val ltr = nInARow(numInARowNeeded, getLTR(state, move), hasBlock)
-      val rtl = nInARow(numInARowNeeded, getRTL(state, move), hasBlock)
+      val column = nInARow(numInARowNeeded, getColumn(state, move, rowCount), hasBlock)
+      val ltr = nInARow(numInARowNeeded, getLTR(state, move, rowCount, columnCount), hasBlock)
+      val rtl = nInARow(numInARowNeeded, getRTL(state, move, rowCount, columnCount), hasBlock)
 
       if (row != null) return row
       else if (column != null) return column
@@ -240,5 +274,29 @@ class MinimaxTree[Node] {
       }
     }
     println("Generation completed!")
+  }
+
+  private def minimize(node: Node, depth: Int, alpha: Int, beta: Int, hasBlock: Boolean): Int = {
+    if (node.isLeaf || depth == 0) return node.calculateValue(hasBlock) // calculate node value
+    var newBeta = beta
+    node.children.foreach(child => {
+      newBeta = math.min(beta, maximize(child, depth - 1, alpha, newBeta, hasBlock))
+      if (alpha >= newBeta) return alpha
+    })
+    newBeta
+  }
+
+  private def maximize(node: Node, depth: Int, alpha: Int, beta: Int, hasBlock: Boolean): Int = {
+    if (node.isLeaf || depth == 0) return node.calculateValue(hasBlock) // calculate node value
+    var newAlpha = alpha
+    node.children.foreach(child => {
+      newAlpha = math.max(newAlpha, minimize(child, depth - 1, newAlpha, beta, hasBlock))
+      if (newAlpha >= beta) return beta
+    })
+    newAlpha
+  }
+
+  def evaluateTreeWithAlphaBeta(numberOfLevel: Int, hasBlock: Boolean) = {
+    minimize(root, numberOfLevel, Integer.MIN_VALUE, Integer.MAX_VALUE, hasBlock)
   }
 }

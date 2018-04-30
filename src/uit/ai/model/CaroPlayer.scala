@@ -4,6 +4,7 @@ import java.util.Random
 import scala.Array
 
 class CaroPlayer extends Player {
+  val numberOfLevel = 5
   def getName: String = "Computer AI"
   def nextMoveRandom(board: CaroBoard, playerSide: Cell, hasBlock: Boolean): (Int, Int) = {
     val size = board.rowCount
@@ -20,18 +21,26 @@ class CaroPlayer extends Player {
 
   def nextMove(board: CaroBoard, playerSide: Cell, hasBlock: Boolean): (Int, Int) = {
     // rebuild caro board
+    var countEmpty = 0
     val boolBoard: Array[Array[Option[Boolean]]] = Array.fill[Option[Boolean]](board.rowCount, board.columnCount)(null)
     val tempBoard = board.getBoard
     for (r <- 0 until board.rowCount)
       for (c <- 0 until board.columnCount) {
-        if (tempBoard(r)(c) == Blank) boolBoard(r)(c) = null
-        else if (tempBoard(r)(c) == playerSide) boolBoard(r)(c) = Option(true)
+        if (tempBoard(r)(c) == Blank) {
+          countEmpty += 1
+          boolBoard(r)(c) = null
+        } else if (tempBoard(r)(c) == playerSide) boolBoard(r)(c) = Option(true)
         else boolBoard(r)(c) = Option(false)
       }
-    // build tree
-    var minimaxTree = new MinimaxTree()
-    minimaxTree.setRootNode(boolBoard)
-    minimaxTree.fillInTheTree(5, hasBlock)
-    (7, 7)
+    if (countEmpty < board.rowCount * board.columnCount) {
+      // build tree
+      var minimaxTree = new MinimaxTree()
+      minimaxTree.setRootNode(boolBoard)
+      minimaxTree.fillInTheTree(numberOfLevel, hasBlock)
+      minimaxTree.evaluateTreeWithAlphaBeta(numberOfLevel, hasBlock)
+      (9, 9)
+    } else {
+      (board.rowCount / 2, board.columnCount / 2)
+    }
   }
 }
