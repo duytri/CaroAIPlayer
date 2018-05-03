@@ -1,4 +1,4 @@
-package uit.ai.model
+package main.scala.uit.ai.model
 
 import scala.collection.mutable.ListBuffer
 import scala.collection.mutable.ArrayBuffer
@@ -85,6 +85,7 @@ class MinimaxTree[Node] {
     def generateChildren(maxLevel: Int, hasBlock: Boolean) = {
       for (e <- getCandidates()) {
         val state = getStateAfterMove(e._1, e._2, !player)
+        var node: Node = null
         var value: Option[Int] = null
         val checkLeaf = {
           Node.checkWinAtState(numInARowNeeded, state, e, rowCount, columnCount, hasBlock) match {
@@ -100,7 +101,14 @@ class MinimaxTree[Node] {
             case None => false
           }
         }
-        var node: Node = new Node(level + 1, !player, !isMax, checkLeaf, e, value, state, List.empty[Node])
+        if (value == null) {
+          if (isMax)
+            node = new Node(level + 1, !player, !isMax, checkLeaf, e, Option(Int.MaxValue), state, List.empty[Node])
+          else
+            node = new Node(level + 1, !player, !isMax, checkLeaf, e, Option(Int.MinValue), state, List.empty[Node])
+        } else {
+          node = new Node(level + 1, !player, !isMax, checkLeaf, e, value, state, List.empty[Node])
+        }
         children = children.+:(node)
       }
       //children
@@ -124,7 +132,7 @@ class MinimaxTree[Node] {
         })*/
 
         val arrayMove = bufferMove.toArray
-        
+
         arrayMove.foreach(row => {
           val side = Node.nInARow(1, row, hasBlock)
           if (side == Option(true)) // Me
@@ -132,7 +140,7 @@ class MinimaxTree[Node] {
           else if (side == Option(false)) // My Opponent
             point -= ONE_VALUE
         })
-        
+
         arrayMove.foreach(row => {
           val side = Node.nInARow(2, row, hasBlock)
           if (side == Option(true)) // Me
@@ -140,7 +148,7 @@ class MinimaxTree[Node] {
           else if (side == Option(false)) // My Opponent
             point -= TWO_VALUE
         })
-        
+
         arrayMove.foreach(row => {
           val side = Node.nInARow(3, row, hasBlock)
           if (side == Option(true)) // Me
