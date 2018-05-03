@@ -1,7 +1,6 @@
 package uit.ai.model
 
 import java.util.Random
-import scala.Array
 
 class CaroPlayer extends Player {
   val numberOfLevel = 5
@@ -29,8 +28,11 @@ class CaroPlayer extends Player {
         if (tempBoard(r)(c) == Blank) {
           countEmpty += 1
           boolBoard(r)(c) = null
-        } else if (tempBoard(r)(c) == playerSide) boolBoard(r)(c) = Option(true)
-        else boolBoard(r)(c) = Option(false)
+        } else if (tempBoard(r)(c) == playerSide) {
+          boolBoard(r)(c) = Option(true) // True: Me, False: Opponent
+        } else {
+          boolBoard(r)(c) = Option(false)
+        }
       }
     if (countEmpty < board.rowCount * board.columnCount) {
       // build tree
@@ -38,7 +40,7 @@ class CaroPlayer extends Player {
       minimaxTree.setRootNode(boolBoard)
       minimaxTree.fillInTheTree(numberOfLevel, hasBlock)
       minimaxTree.evaluateTreeWithAlphaBeta(numberOfLevel, hasBlock)
-      (9, 9)
+      minimaxTree.getBestMove()
     } else {
       (board.rowCount / 2, board.columnCount / 2)
     }
