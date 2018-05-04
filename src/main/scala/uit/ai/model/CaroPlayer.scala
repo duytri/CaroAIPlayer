@@ -3,7 +3,7 @@ package main.scala.uit.ai.model
 import java.util.Random
 
 class CaroPlayer extends Player {
-  val numberOfLevel = 5
+  val numberOfLevel = 3
   def getName: String = "Computer AI"
   def nextMoveRandom(board: CaroBoard, playerSide: Cell, hasBlock: Boolean): (Int, Int) = {
     val size = board.rowCount

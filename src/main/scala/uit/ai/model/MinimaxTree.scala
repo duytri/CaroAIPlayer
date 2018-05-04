@@ -300,9 +300,9 @@ class MinimaxTree[Node] {
     preorder { n =>
       {
         if (n.level < numberOfLevel && !n.isLeaf) {
-          //println("Level: " + n.level)
+          println("Level: " + n.level)
           n.generateChildren(numberOfLevel, hasBlock)
-          //println("Has " + n.children.size + " childrens")
+          println("Has value: " + n.children(0).value)
         }
       }
     }
@@ -317,7 +317,7 @@ class MinimaxTree[Node] {
       //println("min")
       newBeta = math.min(newBeta, maximize(child, depth - 1, alpha, newBeta, hasBlock))
       if (alpha >= newBeta) {
-        node.value = alpha
+        node.value = newBeta
         return alpha
       }
     })
@@ -333,7 +333,7 @@ class MinimaxTree[Node] {
       //println("max")
       newAlpha = math.max(newAlpha, minimize(child, depth - 1, newAlpha, beta, hasBlock))
       if (newAlpha >= beta) {
-        node.value = beta
+        node.value = newAlpha
         return beta
       }
     })
