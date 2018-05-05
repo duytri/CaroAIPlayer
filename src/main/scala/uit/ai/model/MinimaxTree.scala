@@ -107,6 +107,13 @@ class MinimaxTree[Node] {
           else
             node = new Node(level + 1, !player, !isMax, checkLeaf, e, Int.MinValue, state, List.empty[Node])
         } else {
+          // Check board content at this state
+          /*println("Move: " + e)
+          println("LEAF: ")
+          state.foreach(row => {
+            row.foreach(x => print(x + " "))
+            println()
+          })*/
           node = new Node(level + 1, !player, !isMax, checkLeaf, e, value, state, List.empty[Node])
         }
         children = children.+:(node)
@@ -123,8 +130,9 @@ class MinimaxTree[Node] {
         bufferMove.append(Node.getLTR(board, move, rowCount, columnCount))
         bufferMove.append(Node.getRTL(board, move, rowCount, columnCount))
 
+        // Check board content at this state
         /*println("Move: " + move)
-        println("Board: ")
+        println("Node at Leaf: ")
         board.foreach(row => {
           row.foreach(x => print(x + " "))
           println()
