@@ -38,7 +38,6 @@ class CaroPlayer extends Player {
       // build tree
       var minimaxTree = new MinimaxTree()
       minimaxTree.setRootNode(boolBoard)
-      minimaxTree.fillInTheTree(numberOfLevel, hasBlock)
       minimaxTree.evaluateTreeWithAlphaBeta(numberOfLevel, hasBlock)
       minimaxTree.getBestMove()
     } else {

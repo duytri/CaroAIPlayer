@@ -6,10 +6,7 @@ import scala.collection.mutable.ArrayBuffer
 class MinimaxTree[Node] {
 
   val WIN_VALUE = 100000
-  val FOUR_VALUE = 50000
-  val THREE_VALUE = 10000
-  val TWO_VALUE = 100
-  val ONE_VALUE = 1
+  val DIVIDE_RATIO = 7
 
   class Node(
     val level: Int,
@@ -120,53 +117,26 @@ class MinimaxTree[Node] {
     }*/
 
     def calculateValue(node: Node, hasBlock: Boolean): Int = {
-      if (node.isLeaf) return node.value
-      else {
-        var point = 0
-        val bufferMove = new ArrayBuffer[Array[Option[Boolean]]]()
-        bufferMove.append(Node.getRow(node.board, node.move))
-        bufferMove.append(Node.getColumn(node.board, node.move, node.rowCount))
-        bufferMove.append(Node.getLTR(node.board, node.move, node.rowCount, node.columnCount))
-        bufferMove.append(Node.getRTL(node.board, node.move, node.rowCount, node.columnCount))
+      var point = 0
+      val bufferMove = new ArrayBuffer[Array[Option[Boolean]]]()
+      bufferMove.append(Node.getRow(node.board, node.move))
+      bufferMove.append(Node.getColumn(node.board, node.move, node.rowCount))
+      bufferMove.append(Node.getLTR(node.board, node.move, node.rowCount, node.columnCount))
+      bufferMove.append(Node.getRTL(node.board, node.move, node.rowCount, node.columnCount))
 
-        val arrayMove = bufferMove.toArray
+      val arrayMove = bufferMove.toArray
 
+      for (num <- node.numInARowNeeded to 1 by -1) {
         arrayMove.foreach(row => {
-          val side = Node.nInARow(1, row, hasBlock)
+          val side = Node.nInARow(num, row, hasBlock)
           if (side == Option(true)) // Me
-            point += ONE_VALUE
+            point += WIN_VALUE / ((node.numInARowNeeded + 1 - num) * DIVIDE_RATIO)
           else if (side == Option(false)) // My Opponent
-            point -= ONE_VALUE
+            point -= WIN_VALUE / ((node.numInARowNeeded + 1 - num) * DIVIDE_RATIO)
         })
-
-        arrayMove.foreach(row => {
-          val side = Node.nInARow(2, row, hasBlock)
-          if (side == Option(true)) // Me
-            point += TWO_VALUE
-          else if (side == Option(false)) // My Opponent
-            point -= TWO_VALUE
-        })
-
-        arrayMove.foreach(row => {
-          val side = Node.nInARow(3, row, hasBlock)
-          if (side == Option(true)) // Me
-            point += THREE_VALUE
-          else if (side == Option(false)) // My Opponent
-            point -= THREE_VALUE
-        })
-
-        arrayMove.foreach(row => {
-          val side = Node.nInARow(4, row, hasBlock)
-          if (side == Option(true)) // Me
-            point += FOUR_VALUE
-          else if (side == Option(false)) // My Opponent
-            point -= FOUR_VALUE
-        })
-
-        //value = point
-
-        return point
       }
+
+      return point
     }
 
     def getRow(board: Array[Array[Option[Boolean]]], move: (Int, Int)): Array[Option[Boolean]] = {
