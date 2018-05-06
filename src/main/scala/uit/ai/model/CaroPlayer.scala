@@ -35,11 +35,8 @@ class CaroPlayer extends Player {
         }
       }
     if (countEmpty < board.rowCount * board.columnCount) {
-      // build tree
-      var minimaxTree = new MinimaxTree()
-      minimaxTree.setRootNode(boolBoard)
-      minimaxTree.evaluateTreeWithAlphaBeta(numberOfLevel, hasBlock)
-      minimaxTree.getBestMove()
+      val minimax = new MinimaxTree
+      minimax.evaluateTreeWithAlphaBeta(boolBoard, numberOfLevel, hasBlock)
     } else {
       (board.rowCount / 2, board.columnCount / 2)
     }

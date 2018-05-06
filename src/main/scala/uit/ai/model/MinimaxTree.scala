@@ -1,22 +1,14 @@
 package main.scala.uit.ai.model
 
-import scala.collection.mutable.ListBuffer
 import scala.collection.mutable.ArrayBuffer
 
 class MinimaxTree[Node] {
 
-  val WIN_VALUE = 100000
-  val DIVIDE_RATIO = 7
-
   class Node(
     val level: Int,
     val player: Boolean,
-    val isMax: Boolean,
-    val isLeaf: Boolean,
     val move: (Int, Int),
-    var value: Int,
-    val board: Array[Array[Option[Boolean]]],
-    var children: Seq[Node]) {
+    val board: Array[Array[Option[Boolean]]]) {
 
     val rowCount = board.length
     val columnCount = if (board.isEmpty) 0 else board(0).length
@@ -40,12 +32,16 @@ class MinimaxTree[Node] {
   }
 
   object Node {
-    def getCandidates(board: Array[Array[Option[Boolean]]]): List[(Int, Int)] = {
+
+    val WIN_VALUE = 100000
+    val DIVIDE_RATIO = 7
+
+    def getCandidates(board: Array[Array[Option[Boolean]]]): Array[(Int, Int)] = {
       val rowCount = board.length
       val columnCount = if (board.isEmpty) 0 else board(0).length
 
-      val candidates = new ListBuffer[(Int, Int)] //set of candidates
-      val nonAvailableElems = new ListBuffer[(Int, Int)] //set of non available movements
+      val candidates = new ArrayBuffer[(Int, Int)] //set of candidates
+      val nonAvailableElems = new ArrayBuffer[(Int, Int)] //set of non available movements
       // get all non-available moves
       for (r <- 0 until rowCount)
         for (c <- 0 until columnCount)
@@ -71,7 +67,7 @@ class MinimaxTree[Node] {
           candidates.append((e._1 - 1, e._2 - 1))
       }
       //println("Candidate size: " + candidates.size)
-      candidates.toList
+      candidates.toArray
     }
 
     def getStateAfterMove(board: Array[Array[Option[Boolean]]], move: (Int, Int), player: Boolean) = {
@@ -84,37 +80,6 @@ class MinimaxTree[Node] {
       cloneBoard(move._1)(move._2) = Option(player)
       cloneBoard
     }
-
-    /*def generateChildren(board: Array[Array[Option[Boolean]]],player:Boolean,maxLevel: Int, hasBlock: Boolean) = {
-      for (e <- getCandidates(board)) {
-        val state = getStateAfterMove(board,e._1, e._2, !player)
-        var node: Node = null
-        var value = 0
-        val checkLeaf = {
-          Node.checkWinAtState(numInARowNeeded, state, e, rowCount, columnCount, hasBlock) match {
-            case Some(true) => {
-              value = WIN_VALUE // I win
-              true
-            }
-            case Some(false) => {
-              value = -WIN_VALUE // Opponent win
-              true
-            }
-            case null => false
-            case None => false
-          }
-        }
-        if (value == 0) {
-          if (isMax)
-            node = new Node(level + 1, !player, !isMax, checkLeaf, e, Int.MaxValue, state, List.empty[Node])
-          else
-            node = new Node(level + 1, !player, !isMax, checkLeaf, e, Int.MinValue, state, List.empty[Node])
-        } else {
-          node = new Node(level + 1, !player, !isMax, checkLeaf, e, value, state, List.empty[Node])
-        }
-        children = children.+:(node)
-      }
-    }*/
 
     def calculateValue(node: Node, hasBlock: Boolean): Int = {
       var point = 0
@@ -234,49 +199,22 @@ class MinimaxTree[Node] {
     }
   }
 
-  private var root: Node = null
+  var root: Node = null
 
-  def setRootNode(board: Array[Array[Option[Boolean]]]) {
-    root = new Node(0, false, isMax = false, false, null, Int.MaxValue, board.clone(), List.empty[Node])
-  }
-
-  def preorder(visit: Node => Unit) {
-    def recur(n: Node) {
-      visit(n)
-      for (c <- n.children) recur(c)
-    }
-    recur(root)
-  }
-
-  def postorder(visit: Node => Unit) {
-    def recur(n: Node) {
-      for (c <- n.children) recur(c)
-      visit(n)
-    }
-    recur(root)
-  }
-
-  def height(n: Node): Int = {
-    1 + n.children.foldLeft(-1)((h, c) => h max height(c))
-  }
-
-  def size(n: Node): Int = {
-    1 + n.children.foldLeft(0)((s, c) => s + size(c))
+  def setRootNode(board: Array[Array[Option[Boolean]]], player: Boolean, move: (Int, Int)) {
+    root = new Node(0, player, move, board.clone())
   }
 
   private def minimize(node: Node, depth: Int, alpha: Int, beta: Int, hasBlock: Boolean): Int = {
     if (Node.checkWinAtState(node, hasBlock) != null || depth == 0) return Node.calculateValue(node, hasBlock) // calculate node value
     var newBeta = beta
     Node.getCandidates(node.board).foreach(move => {
-      var child = new Node(node.level + 1, !node.player, !node.isMax, false, move, Int.MinValue, Node.getStateAfterMove(node.board, move, !node.player), List.empty[Node])
-      node.children = node.children.+:(child)
+      var child = new Node(node.level + 1, !node.player, move, Node.getStateAfterMove(node.board, move, !node.player))
       newBeta = math.min(newBeta, maximize(child, depth - 1, alpha, newBeta, hasBlock))
       if (alpha >= newBeta) {
-        node.value = newBeta
         return alpha
       }
     })
-    node.value = newBeta
     newBeta
   }
 
@@ -284,33 +222,29 @@ class MinimaxTree[Node] {
     if (Node.checkWinAtState(node, hasBlock) != null || depth == 0) return Node.calculateValue(node, hasBlock) // calculate node value
     var newAlpha = alpha
     Node.getCandidates(node.board).foreach(move => {
-      var child = new Node(node.level + 1, !node.player, !node.isMax, false, move, Int.MaxValue, Node.getStateAfterMove(node.board, move, !node.player), List.empty[Node])
-      node.children = node.children.+:(child)
+      var child = new Node(node.level + 1, !node.player, move, Node.getStateAfterMove(node.board, move, !node.player))
       newAlpha = math.max(newAlpha, minimize(child, depth - 1, newAlpha, beta, hasBlock))
       if (newAlpha >= beta) {
-        node.value = newAlpha
         return beta
       }
     })
-    node.value = newAlpha
     newAlpha
   }
 
-  def evaluateTreeWithAlphaBeta(numberOfLevel: Int, hasBlock: Boolean) = {
-    minimize(root, numberOfLevel, Int.MinValue, Int.MaxValue, hasBlock)
-  }
-
-  def getBestMove(): (Int, Int) = {
+  def evaluateTreeWithAlphaBeta(board: Array[Array[Option[Boolean]]], numberOfLevel: Int, hasBlock: Boolean): (Int, Int) = {
     var maxValue = Int.MinValue
-    var maxNode: Node = null
-    root.children.foreach(child => {
-      //println("Child value: " + child.value)
-      if (child.value > maxValue) {
-        maxNode = child
-        maxValue = child.value
+    var maxMove: (Int, Int) = (0, 0)
+    //minimize(root, numberOfLevel, Int.MinValue, Int.MaxValue, hasBlock)
+    Node.getCandidates(board).foreach(move => {
+      val tree = new MinimaxTree
+      tree.setRootNode(Node.getStateAfterMove(board, move, true), true, move)
+      val newValue = tree.maximize(tree.root, numberOfLevel, Int.MinValue, Int.MaxValue, hasBlock)
+      if (maxValue < newValue) {
+        maxValue = newValue
+        maxMove = move
       }
     })
-    maxNode.move
+    return maxMove
   }
 }
 
