@@ -36,6 +36,86 @@ class MinimaxTree[Node] {
     val WIN_VALUE = 100000
     val DIVIDE_RATIO = 7
 
+    /*var win = [
+        [1, 1, 1, 1, 1]
+      ];
+      var unCovered4 = [
+        [0, 1, 1, 1, 1, 0]
+      ];
+      var unCovered3 = [
+        [0, 1, 1, 1, 0, 0],
+        [0, 0, 1, 1, 1, 0],
+        [0, 1, 0, 1, 1, 0],
+        [0, 1, 1, 0, 1, 0]
+      ];
+      var unCovered2 = [
+        [0, 0, 1, 1, 0, 0],
+        [0, 1, 0, 1, 0, 0],
+        [0, 0, 1, 0, 1, 0],
+        [0, 1, 1, 0, 0, 0],
+        [0, 0, 0, 1, 1, 0],
+        [0, 1, 0, 0, 1, 0]
+      ];
+      var covered4 = [
+        [-1, 1, 0, 1, 1, 1],
+        [-1, 1, 1, 0, 1, 1],
+        [-1, 1, 1, 1, 0, 1],
+        [-1, 1, 1, 1, 1, 0],
+        [0, 1, 1, 1, 1, -1],
+        [1, 0, 1, 1, 1, -1],
+        [1, 1, 0, 1, 1, -1],
+        [1, 1, 1, 0, 1, -1]
+      ];
+      var covered3 = [
+        [-1, 1, 1, 1, 0, 0],
+        [-1, 1, 1, 0, 1, 0],
+        [-1, 1, 0, 1, 1, 0],
+        [0, 0, 1, 1, 1, -1],
+        [0, 1, 0, 1, 1, -1],
+        [0, 1, 1, 0, 1, -1],
+        [-1, 1, 0, 1, 0, 1, -1],
+        [-1, 0, 1, 1, 1, 0, -1],
+        [-1, 1, 1, 0, 0, 1, -1],
+        [-1, 1, 0, 0, 1, 1, -1]
+      ];*/
+    
+    var win = Array(
+      Array(Option(true), Option(true), Option(true), Option(true), Option(true)))
+    var unCovered4 = Array(
+      Array(null, Option(true), Option(true), Option(true), Option(true), null))
+    var unCovered3 = Array(
+      Array(null, Option(true), Option(true), Option(true), null, null),
+      Array(null, null, Option(true), Option(true), Option(true), null),
+      Array(null, Option(true), null, Option(true), Option(true), null),
+      Array(null, Option(true), Option(true), null, Option(true), null))
+    var unCovered2 = Array(
+      Array(null, null, Option(true), Option(true), null, null),
+      Array(null, Option(true), null, Option(true), null, null),
+      Array(null, null, Option(true), null, Option(true), null),
+      Array(null, Option(true), Option(true), null, null, null),
+      Array(null, null, null, Option(true), Option(true), null),
+      Array(null, Option(true), null, null, Option(true), null))
+    var covered4 = Array(
+      Array(Option(false), Option(true), null, Option(true), Option(true), Option(true)),
+      Array(Option(false), Option(true), Option(true), null, Option(true), Option(true)),
+      Array(Option(false), Option(true), Option(true), Option(true), null, Option(true)),
+      Array(Option(false), Option(true), Option(true), Option(true), Option(true), null),
+      Array(null, Option(true), Option(true), Option(true), Option(true), Option(false)),
+      Array(Option(true), null, Option(true), Option(true), Option(true), Option(false)),
+      Array(Option(true), Option(true), null, Option(true), Option(true), Option(false)),
+      Array(Option(true), Option(true), Option(true), null, Option(true), Option(false)))
+    var covered3 = Array(
+      Array(Option(false), Option(true), Option(true), Option(true), null, null),
+      Array(Option(false), Option(true), Option(true), null, Option(true), null),
+      Array(Option(false), Option(true), null, Option(true), Option(true), null),
+      Array(null, null, Option(true), Option(true), Option(true), Option(false)),
+      Array(null, Option(true), null, Option(true), Option(true), Option(false)),
+      Array(null, Option(true), Option(true), null, Option(true), Option(false)),
+      Array(Option(false), Option(true), null, Option(true), null, Option(true), Option(false)),
+      Array(Option(false), null, Option(true), Option(true), Option(true), null, Option(false)),
+      Array(Option(false), Option(true), Option(true), null, null, Option(true), Option(false)),
+      Array(Option(false), Option(true), null, null, Option(true), Option(true), Option(false)))
+
     def getCandidates(board: Array[Array[Option[Boolean]]]): Array[(Int, Int)] = {
       val rowCount = board.length
       val columnCount = if (board.isEmpty) 0 else board(0).length
