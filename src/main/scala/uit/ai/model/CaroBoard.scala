@@ -94,6 +94,7 @@ class CaroBoard(val board: Array[Array[Cell]], val hasBlock: Boolean) {
 
   // find the winner
   def determineWinner: GameResult.Value = {
+    val winnerText = "Player %s won!"
     val checkForWinner = { array: Array[Cell] =>
       CaroBoard.nInARow(numInARowNeeded, array, hasBlock) match {
         case Some(player) => return player match { // non-local return!
@@ -132,6 +133,13 @@ class CaroBoard(val board: Array[Array[Cell]], val hasBlock: Boolean) {
     val cloneBoard = this.clone()
     cloneBoard.update(row, col, Cell)
     cloneBoard
+  }
+
+  //
+  def getBoardAsByteArray(): Array[Array[Byte]] = {
+    (for (r <- 0 until rowCount) yield (
+      for (c <- 0 until columnCount)
+        yield board(r)(c).value).toArray).toArray
   }
 }
 
